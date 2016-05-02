@@ -2,7 +2,7 @@ import os
 import sys
 
 from oeqa2.test.loader import OETestLoader
-from oeqa2.test.runner import OETestRunner
+from oeqa2.test.runner import OETestRunner, OEStreamLogger
 
 class OETestContext(object):
     loaderClass = OETestLoader
@@ -29,9 +29,11 @@ class OETestContext(object):
         if modules_manifest:
             modules = self._read_modules_from_manifest(modules_manifest)
 
-        self.loader = self.loaderClass(self, module_path, modules, modules_required)
+        self.loader = self.loaderClass(self, module_path, modules,
+                modules_required)
         self.suites = self.loader.discover()
 
     def runTests(self):
-        self.runner = self.runnerClass()
+        streamLogger = OEStreamLogger(self.logger)
+        self.runner = self.runnerClass(stream=streamLogger, verbosity=2)
         self.runner.run(self.suites)
