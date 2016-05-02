@@ -5,6 +5,17 @@ import unittest
 from .case import OETestCase
 from .decorator import OETestDecorator, OETestDepends
 
+def _make_failed_test(classname, methodname, exception, suiteClass):
+    """
+        When loading tests unittest framework stores the exception in a new
+        class created for be displayed into run().
+
+        For our purposes will be better to raise the exception in loading 
+        step instead of wait to run the test suite.
+    """
+    raise exception
+unittest.loader._make_failed_test = _make_failed_test
+
 def _add_depends(registry, case, depends):
     module_name = case.__module__
     class_name = case.__class__.__name__
@@ -29,15 +40,6 @@ def _add_depends(registry, case, depends):
             registry[case_id] = []
         if not depend_id in registry[case_id]:
             registry[case_id].append(depend_id)
-
-
-def _validate_suite_imports(suite):
-    # XXX: Improve to provide more information about import errors
-    for s in suite:
-        for case in s:
-            if case.__class__.__name__ == 'ModuleImportFailure':
-                raise ImportError("Failed to import module %s" %\
-                        s.__repr__())
 
 def _validate_test_case_depends(cases, depends):
     for case in depends:
@@ -148,7 +150,6 @@ class OETestLoader(unittest.TestLoader):
         suite = super(OETestLoader, self).discover(self.module_path,
                 pattern='*.py')
 
-        _validate_suite_imports(suite)
         _validate_test_case_depends(self._registry['cases'],
                 self._registry['depends'])
         cases = _order_test_case_by_depends(self._registry['cases'],
