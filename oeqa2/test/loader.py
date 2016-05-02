@@ -108,7 +108,7 @@ class OETestLoader(unittest.TestLoader):
             for f in m.__closure__:
                 obj = f.cell_contents
                 if isinstance(obj, OETestDecorator):
-                    obj.case = case
+                    obj.bind(case)
 
                     if isinstance(obj, OETestDepends):
                         _add_depends(self._registry['depends'], case,
