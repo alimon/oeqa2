@@ -8,7 +8,8 @@ class OETestDepends(OETestDecorator):
         elif dtype is tuple or dtype is list:
             self.depends = depends
         else:
-            raise TypeError("")
+            raise TypeError("OETestDepends decorator expects str, tuple or list"\
+                    " argument, received %s." % dtype)
 
     def __call__(self, func):
         def wrapped_f(*args, **kwargs):
