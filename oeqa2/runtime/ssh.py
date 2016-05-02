@@ -3,7 +3,7 @@ import unittest
 import sys
 
 from oeqa2.test.case import OETestCase
-from oeqa2.test.decorator import OETestDepends
+from oeqa2.test.decorator import OETestDepends, OETestID
 
 class SshTest(OETestCase):
     @OETestDepends('test_ssh_10')
@@ -14,6 +14,7 @@ class SshTest(OETestCase):
     def test_ssh_10(self):
         pass
 
+    @OETestID(224)
     @OETestDepends('ping.PingTest.test_ping')
     def test_ssh(self):
         (status, output) = self.target.run('uname -a')
