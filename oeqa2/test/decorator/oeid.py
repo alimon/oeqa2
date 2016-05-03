@@ -1,3 +1,4 @@
+from functools import wraps
 from . import OETestDecorator
 
 class OETestID(OETestDecorator):
@@ -10,8 +11,9 @@ class OETestID(OETestDecorator):
                     " %s." % oeidtype)
 
     def __call__(self, func):
+        @wraps(func)
         def wrapped_f(*args, **kwargs):
-            self.case.tc = self.case.tc # HACK for access cell of this
+            self.oeid = self.oeid # For make visible in obj.cell_contents
             return func(*args, **kwargs)
         return wrapped_f
 

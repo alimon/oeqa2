@@ -1,3 +1,4 @@
+from functools import wraps
 from . import OETestDecorator
 
 class OETestDepends(OETestDecorator):
@@ -12,7 +13,8 @@ class OETestDepends(OETestDecorator):
                     " argument, received %s." % dtype)
 
     def __call__(self, func):
+        @wraps(func)
         def wrapped_f(*args, **kwargs):
-            self.case.tc = self.case.tc # HACK for access cell of this
+            self.depends = self.depends # For make visible in obj.cell_contents
             return func(*args, **kwargs)
         return wrapped_f
