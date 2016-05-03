@@ -19,7 +19,6 @@ unittest.loader._make_failed_test = _make_failed_test
 def _add_depends(registry, case, depends):
     module_name = case.__module__
     class_name = case.__class__.__name__
-    method_name = case._testMethodName
 
     case_id = case.id()
 
@@ -30,11 +29,8 @@ def _add_depends(registry, case, depends):
             depend_id = ".".join((module_name, class_name, dparts[0]))
         elif len(dparts) == 2:
             depend_id = ".".join((module_name, dparts[0], dparts[1]))
-        elif len(dparts) == 3:
-            depend_id = ".".join((dparts[0], dparts[1], dparts[2]))
         else:
-            raise Exception("Dependencies only allowed of" \
-                    " test and module.test")
+            depend_id = depend
 
         if not case_id in registry:
             registry[case_id] = []
@@ -45,8 +41,8 @@ def _validate_test_case_depends(cases, depends):
     for case in depends:
         for dep in depends[case]:
             if not dep in cases:
-                raise Exception("TestCase %s depends on %s and isn't available"\
-                        % (case, dep))
+                raise Exception("TestCase %s depends on %s and isn't available, "\
+                       "cases available %s." % (case, dep, str(cases.keys())))
 
 def _order_test_case_by_depends(cases, depends):
     def _dep_resolve(graph, node, resolved, seen):
@@ -100,19 +96,23 @@ class OETestLoader(unittest.TestLoader):
         self._registry['cases'][case_id] = case
 
     def _handleTestCaseDecorators(self, case):
-            m = getattr(case, case._testMethodName, None)
+        def _handle(obj):
+            if isinstance(obj, OETestDecorator):
+                obj.bind(case)
 
-            if not (hasattr(m, '__closure__') and m.__closure__):
-                return
+                if isinstance(obj, OETestDepends):
+                    _add_depends(self._registry['depends'], case,
+                            obj.depends)
 
-            for f in m.__closure__:
-                obj = f.cell_contents
-                if isinstance(obj, OETestDecorator):
-                    obj.bind(case)
+        def _walk_closure(obj):
+            if hasattr(obj, '__closure__') and obj.__closure__:
+                for f in obj.__closure__:
+                    obj = f.cell_contents
+                    _handle(obj)
+                    _walk_closure(obj)
 
-                    if isinstance(obj, OETestDepends):
-                        _add_depends(self._registry['depends'], case,
-                                obj.depends)
+        method = getattr(case, case._testMethodName, None)
+        _walk_closure(method)
 
     def loadTestsFromTestCase(self, testCaseClass):
         """Return a suite of all tests cases contained in testCaseClass"""
