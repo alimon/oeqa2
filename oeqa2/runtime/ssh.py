@@ -5,6 +5,11 @@ import sys
 from oeqa2.test.case import OETestCase
 from oeqa2.test.decorator import OETestDepends, OETestID
 
+class SshTest2(OETestCase):
+    @OETestDepends('SshTest.test_ssh_20')
+    def test_ssh_30(self):
+        pass
+
 class SshTest(OETestCase):
     @OETestDepends('test_ssh_10')
     def test_ssh_20(self):
@@ -15,7 +20,7 @@ class SshTest(OETestCase):
         pass
 
     @OETestID(224)
-    @OETestDepends('ping.PingTest.test_ping')
+    @OETestDepends(('basic.ping.PingTest.test_ping'))
     def test_ssh(self):
         (status, output) = self.target.run('uname -a')
         self.assertEqual(status, 0, msg="SSH Test failed: %s" % output)
