@@ -1,5 +1,17 @@
+from unittest import SkipTest
 from functools import wraps
+
 from . import OETestDecorator
+
+def _skipTestDependency(case, depends):
+    results = case.tc._results
+    skipReasons = ['errors', 'failures', 'skipped']
+
+    for reason in skipReasons:
+        for test, _ in results[reason]:
+            if test.id() in depends:
+                raise SkipTest("Test case %s depends on %s and was in %s." \
+                        % (case.id(), test.id(), reason))
 
 class OETestDepends(OETestDecorator):
     def __init__(self, depends):
@@ -18,3 +30,6 @@ class OETestDepends(OETestDecorator):
             self.depends = self.depends # For make visible in obj.cell_contents
             return func(*args, **kwargs)
         return wrapped_f
+
+    def setUp(self):
+        _skipTestDependency(self.case, self.depends)
