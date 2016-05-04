@@ -8,6 +8,11 @@ class OETestContext(object):
     loaderClass = OETestLoader
     runnerClass = OETestRunner
 
+    _registry = {}
+    _registry['cases'] = {}
+    _registry['depends'] = {}
+    _results = {}
+
     def __init__(self, d, logger):
         self.d = d
         self.logger = logger
@@ -35,5 +40,5 @@ class OETestContext(object):
 
     def runTests(self):
         streamLogger = OEStreamLogger(self.logger)
-        self.runner = self.runnerClass(stream=streamLogger, verbosity=2)
+        self.runner = self.runnerClass(self, stream=streamLogger, verbosity=2)
         self.runner.run(self.suites)

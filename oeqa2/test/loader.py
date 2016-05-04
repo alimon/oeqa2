@@ -72,10 +72,6 @@ def _order_test_case_by_depends(cases, depends):
 class OETestLoader(unittest.TestLoader):
     caseClass = OETestCase
 
-    _registry = {}
-    _registry['cases'] = {}
-    _registry['depends'] = {}
-
     kwargs_names = ['testMethodPrefix', 'sortTestMethodUsing', 'suiteClass',
             '_top_level_dir']
 
@@ -93,7 +89,7 @@ class OETestLoader(unittest.TestLoader):
 
     def _registerTestCase(self, case):
         case_id = case.id()
-        self._registry['cases'][case_id] = case
+        self.tc._registry['cases'][case_id] = case
 
     def _handleTestCaseDecorators(self, case):
         def _handle(obj):
@@ -101,7 +97,7 @@ class OETestLoader(unittest.TestLoader):
                 obj.bind(case)
 
                 if isinstance(obj, OETestDepends):
-                    _add_depends(self._registry['depends'], case,
+                    _add_depends(self.tc._registry['depends'], case,
                             obj.depends)
 
         def _walk_closure(obj):
@@ -127,13 +123,11 @@ class OETestLoader(unittest.TestLoader):
         if not testCaseNames and hasattr(testCaseClass, 'runTest'):
             testCaseNames = ['runTest']
 
-        ####
         suite = [testCaseClass(self.tc, tcname)
                 for tcname in testCaseNames]
         for case in suite:
             self._registerTestCase(case)
             self._handleTestCaseDecorators(case)
-        ####
 
         loaded_suite = self.suiteClass(suite)
         return loaded_suite
@@ -150,9 +144,9 @@ class OETestLoader(unittest.TestLoader):
         suite = super(OETestLoader, self).discover(self.module_path,
                 pattern='*.py')
 
-        _validate_test_case_depends(self._registry['cases'],
-                self._registry['depends'])
-        cases = _order_test_case_by_depends(self._registry['cases'],
-                self._registry['depends'])
+        _validate_test_case_depends(self.tc._registry['cases'],
+                self.tc._registry['depends'])
+        cases = _order_test_case_by_depends(self.tc._registry['cases'],
+                self.tc._registry['depends'])
 
         return self.suiteClass(cases)
